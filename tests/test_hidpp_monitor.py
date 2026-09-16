@@ -703,6 +703,33 @@ class BusIntegrationTests(unittest.TestCase):
             self.assertEqual(report["alive"], [])
             self.assertEqual(report["protocol_errors"], [])
 
+    def test_a_c539_mouse_without_battery_voltage_publishes_nothing(self):
+        # Receiver 0xC539 is shared by other LIGHTSPEED mice. One that lacks
+        # feature 0x1001 answers the lookup with index 0, so the daemon must
+        # stay silent: no state file, no protocol error, no crash.
+        bus = FakeHidBus([
+            FakeNode(b"/dev/other", 0xC539, FakePairedDevice(
+                kind=0x03, battery_feature=UNIFIED_BATTERY_FEATURE, battery=60)),
+        ])
+        with DaemonHarness(bus) as harness:
+            harness.threads.extend(harness.module.monitor_device(0xC539, 0xC088, "mouse", 10))
+            # Wait for the daemon to ask ROOT for 0x1001 on this node, so the
+            # assertion below runs after the lookup was answered, not before.
+            deadline = time.monotonic() + 5.0
+            while time.monotonic() < deadline:
+                if any(kind == "write" and path == b"/dev/other"
+                       and req[0] == 0x10 and req[2] == 0x00 and req[4:6] == b"\x10\x01"
+                       for kind, _, path, _, req in bus.log):
+                    break
+                time.sleep(0.02)
+            else:
+                self.fail("the daemon never looked up feature 0x1001")
+            time.sleep(0.3)
+            self.assertFalse(harness.state_file("mouse").exists())
+            report = harness.stop()
+            self.assertEqual(report["alive"], [])
+            self.assertEqual(report["protocol_errors"], [])
+
     def test_g_pro_wired_voltage_updates(self):
         bus = FakeHidBus([
             FakeNode(b"/dev/gpro-wired", 0xC088, FakePairedDevice(
