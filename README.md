@@ -232,6 +232,14 @@ The command links this repository into `~/.config/omarchy/plugins/mryll.logibar`
 
 Mouse buttons: **left** opens the panel, **middle** refreshes the panel. The widget disappears when no device is connected.
 
+### Mouse speed and acceleration (Hyprland Lua)
+
+The Omarchy panel includes mouse controls for connected G Pro and PRO X Superlight mice. Select the mouse, adjust **Pointer speed**, choose **Default**, **Off** (flat), or **Adaptive** acceleration, then click **Apply**. The slider spans Hyprland sensitivity -1 to 1; its midpoint is the default sensitivity. **Defaults** stages the default values; Apply saves them.
+
+These are desktop pointer settings, not hardware DPI. Changes affect only the selected mouse and persist across logins. Before the first save, the controls are a draft rather than a reading of any existing per-device configuration. Logibar does not change pointer settings just by opening the panel.
+
+The helper stores choices in `$XDG_CONFIG_HOME/logibar/mouse-settings.json`, generates `hypr/logibar-mouse.lua`, and adds a marked include at the end of `hypr/hyprland.lua`. It backs up that main config once as `hyprland.lua.before-logibar`, validates a reload, and rolls back if Hyprland reports an error. Existing configuration is preserved; the generated per-device values take precedence. This requires Hyprland's Lua configuration and Python 3. To remove these overrides, remove the marked include and generated file, then reload Hyprland.
+
 > [!TIP]
 > After you edit a file in `omarchy/`, run `omarchy restart shell`. A rescan of the plugins does not compile the QML again.
 

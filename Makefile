@@ -5,6 +5,7 @@ PYTHON ?= python3
 
 WIDGETS = logibar-status logibar-keyboard logibar-mouse logibar-headset
 DAEMONS = logibar-hidpp-monitor logibar-headset-monitor
+HELPERS = logibar-mouse-settings
 TOOLS = tools/logibar-hidpp-battery tools/logibar-hidpp-debug tools/logibar-headset-probe
 SERVICES = systemd/logibar-hidpp-monitor.service systemd/logibar-headset-monitor.service
 UDEV_RULE = udev/70-logitech-hidraw.rules
@@ -12,13 +13,14 @@ UDEV_DIR ?= /etc/udev/rules.d
 OMARCHY_PLUGIN_DIR ?= $(HOME)/.config/omarchy/plugins
 
 test:
+	$(PYTHON) tests/test_mouse_settings.py
 	$(PYTHON) tests/test_hidpp_monitor.py
 	bash tests/test_status.sh
 	bash tests/test_legacy.sh
 	bash tests/test_hardening.sh
 
 install:
-	$(foreach f,$(WIDGETS) $(DAEMONS),install -Dm755 $(f) $(DESTDIR)$(BINDIR)/$(notdir $(f));)
+	$(foreach f,$(WIDGETS) $(DAEMONS) $(HELPERS),install -Dm755 $(f) $(DESTDIR)$(BINDIR)/$(notdir $(f));)
 
 install-tools:
 	$(foreach f,$(TOOLS),install -Dm755 $(f) $(DESTDIR)$(BINDIR)/$(notdir $(f));)
@@ -52,7 +54,7 @@ install-omarchy:
 	@echo 'Now add { "id": "mryll.logibar" } to a bar.layout section in ~/.config/omarchy/shell.json'
 
 uninstall:
-	$(foreach f,$(WIDGETS) $(DAEMONS),rm -f $(DESTDIR)$(BINDIR)/$(notdir $(f));)
+	$(foreach f,$(WIDGETS) $(DAEMONS) $(HELPERS),rm -f $(DESTDIR)$(BINDIR)/$(notdir $(f));)
 
 uninstall-tools:
 	$(foreach f,$(TOOLS),rm -f $(DESTDIR)$(BINDIR)/$(notdir $(f));)

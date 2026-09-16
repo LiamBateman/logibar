@@ -298,19 +298,15 @@ Panel {
   readonly property bool degraded: !hasData || loadError !== ""
 
   // Hover tooltip: quick summary only — the panel is the detail view.
-  function esc(s) {
-    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-  }
-
   readonly property string tooltipText: {
-    if (!hasData) return loadError !== "" ? "<span>" + esc(loadError) + "</span>" : ""
+    if (!hasData) return loadError
     var lines = []
     for (var i = 0; i < deviceRows.length; i++) {
       var d = deviceRows[i]
       lines.push((identityGlyphs[d.id] || "") + " " + d.battery + "%"
         + (d.charging === true ? " · Charging" : ""))
     }
-    return lines.length > 0 ? "<span>" + lines.join("<br/>") + "</span>" : ""
+    return lines.join("\n")
   }
 
   // ---------------------------------------------------------------- helpers
@@ -491,6 +487,7 @@ Panel {
   onSettingsChanged: refresh()
   onOpenedChanged: if (opened) {
     refresh()
+    mouseControls.refresh()
     startOpenSweep()
     Qt.callLater(function() { keyCatcher.forceActiveFocus() })
   }
@@ -714,6 +711,14 @@ Panel {
                 device: modelData
               }
             }
+          }
+
+          MouseControls {
+            id: mouseControls
+            width: parent.width
+            foreground: root.foreground
+            dim: root.dim
+            fontFamily: root.fontFamily
           }
 
           // ---------- Error behind stale data ----------
